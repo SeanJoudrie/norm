@@ -192,12 +192,12 @@
     const n = swipeCount();
     const cur = state.deck[0];
     const progress = n < UNLOCK_AT
-      ? `<div class="progress"><div class="progress-row"><span>Swipes until your first matches</span><span class="num">${n} of ${UNLOCK_AT}</span></div><div class="bar" style="${catVar(cur || TREE[0].id)}"><span style="width:${(n / UNLOCK_AT) * 100}%;background:var(--cat)"></span></div></div>`
+      ? `<div class="progress"><div class="progress-row"><span>Swipes until your first drop</span><span class="num">${n} of ${UNLOCK_AT}</span></div><div class="bar" style="${catVar(cur || TREE[0].id)}"><span style="width:${(n / UNLOCK_AT) * 100}%;background:var(--cat)"></span></div></div>`
       : `<div class="pickbar"><span><strong>Matches unlocked.</strong> Keep swiping to sharpen them.</span><button class="btn btn-text" data-action="go" data-to="matches">See matches</button></div>`;
 
     if (!cur) {
       return `<div class="screen-inner">
-        <div class="screen-head"><span class="label">Your interests</span><h1>You've seen every interest in the demo</h1></div>
+        <div class="screen-head"><span class="label">Build your profile</span><h1>That's every interest in the demo.</h1></div>
         ${progress}
         <div class="empty"><p>${n} answers saved. Star your favorites so matching knows what matters most.</p>
           <div class="btn-row"><button class="btn btn-primary" data-action="go" data-to="profile">Star your Top 20</button>
@@ -207,7 +207,7 @@
     const L = LABELS;
     const crumbs = pathOf(cur).slice(0, -1).map((p) => esc(p.name)).join(' / ');
     return `<div class="screen-inner">
-      <div class="screen-head"><span class="label">Your interests</span><h1>What are you into?</h1></div>
+      <div class="screen-head"><span class="label">Build your profile</span><h1>Swipe on things, not faces.</h1></div>
       ${progress}
       <div class="section">
         <div class="crumbs label">${crumbs || 'All categories'}</div>
@@ -223,7 +223,7 @@
       </div>
       <div class="deck-tools">
         <button class="btn btn-text" data-action="undo" ${state.history.length ? '' : 'disabled'}>${ic('undo-2')}Undo</button>
-        <span class="small">Drag the card, or use arrow keys</span>
+        <span class="small">Drag, tap, or use arrow keys</span>
       </div>
       <p id="deck-live" class="visually-hidden" aria-live="polite">${esc(NODES[cur].name)}</p>
     </div>`;
