@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- page:start -->
+<title>NORM Prototype</title>
+<meta name="description" content="Clickable prototype of NORM: swipe on interests, star your Top 20, and get a small daily drop of people who share them, for dating or friendship.">
+<meta property="og:title" content="NORM Prototype">
+<meta property="og:description" content="Swipe on interests, not faces. A daily drop of people who like what you like, for dating or friendship.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="og.png">
+<meta name="theme-color" content="#f3f4f7">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232346d8'/%3E%3Cpath d='M9 23V9h2.6l7.8 9.6V9H22v14h-2.6l-7.8-9.6V23z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=Public+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <span class="wordmark" aria-label="NORM">NORM</span>
+    <span class="topbar-status num" id="status" aria-live="polite"></span>
+  </header>
+
+  <main class="screen" id="screen"></main>
+
+  <nav class="tabbar" role="tablist" aria-label="Main">
+    <button class="tab" role="tab" data-tab="swipe" aria-selected="true"><span data-icon="layers"></span>Swipe</button>
+    <button class="tab" role="tab" data-tab="matches" aria-selected="false"><span data-icon="heart"></span>Matches</button>
+    <button class="tab" role="tab" data-tab="messages" aria-selected="false"><span data-icon="message-circle"></span>Messages<span class="tab-dot" id="msg-dot" hidden></span></button>
+    <button class="tab" role="tab" data-tab="profile" aria-selected="false"><span data-icon="user"></span>Profile</button>
+  </nav>
+
+  <div class="scrim" id="scrim" hidden></div>
+  <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
+    <div class="sheet-head">
+      <h2 id="sheet-title"></h2>
+      <button class="icon-btn" id="sheet-close" aria-label="Close"><span data-icon="x"></span></button>
+    </div>
+    <div class="sheet-body" id="sheet-body"></div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script src="icons.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+<!-- page:end -->
+</body>
+</html>
