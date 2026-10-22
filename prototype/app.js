@@ -14,7 +14,7 @@
   const ORDER = [];
   (function walk(list, parent, depth) {
     list.forEach((n) => {
-      NODES[n.id] = { ...n, parent, depth, childIds: (n.children || []).map((c) => c.id) };
+      NODES[n.id] = { ...n, icon: n.icon || NODES[parent].icon, parent, depth, childIds: (n.children || []).map((c) => c.id) };
       ORDER.push(n.id);
       if (n.children) walk(n.children, n.id, depth + 1);
     });
@@ -24,15 +24,14 @@
   const pathOf = (id) => { const out = []; let n = NODES[id]; while (n) { out.unshift(n); n = n.parent ? NODES[n.parent] : null; } return out; };
   const inheritsPrivate = (id) => pathOf(id).some((n) => n.private);
 
-  const LABELS = {
-    default: { yes: 'Into it', no: 'Nope', maybe: 'Curious' },
-    title: { yes: 'Love it', no: 'Not for me', maybe: "Haven't seen" },
-    artist: { yes: 'Love them', no: 'Not for me', maybe: "Haven't heard" },
-    team: { yes: 'Fan', no: 'Not a fan', maybe: "Don't follow" },
-  };
-  const labelsFor = (id) => LABELS[NODES[id].kind] || LABELS.default;
-  /* Swipe up on a title, artist or team means "no opinion", stored as skip. */
-  const upValue = (id) => (NODES[id].kind && LABELS[NODES[id].kind] ? 'skip' : 'maybe');
+  const LABELS = { yes: 'Into it', no: 'Nope', maybe: 'Curious' };
+  /* Specific bands, movies and teams are never swipe cards. They are a checklist on the profile. */
+  const PICK_NOUN = { artist: 'artists', title: 'movies', team: 'teams' };
+  const isPick = (id) => Boolean(PICK_NOUN[NODES[id].kind]);
+  const deckChildren = (id) => NODES[id].childIds.filter((k) => !isPick(k));
+  const pickChildren = (id) => NODES[id].childIds.filter(isPick);
+  const pickNoun = (id, n = 2) => { const w = PICK_NOUN[NODES[pickChildren(id)[0]].kind]; return n === 1 ? w.slice(0, -1) : w; };
+  const catVar = (id) => `--cat: var(--c-${rootOf(id).id})`;
 
   /* ---------- State ---------- */
   const fresh = () => ({
@@ -59,7 +58,9 @@
       const raw = localStorage.getItem(STORE_KEY);
       if (!raw) return null;
       const s = JSON.parse(raw);
-      return s && s.answers && s.deck ? { ...fresh(), ...s } : null;
+      if (!s || !s.answers || !s.deck) return null;
+      s.deck = s.deck.filter((id) => NODES[id] && !isPick(id));
+      return { ...fresh(), ...s };
     } catch (e) { return null; }
   }
   function save() {
@@ -164,15 +165,14 @@
   /* ---------- Swipe ---------- */
   function cardHTML(id, cls) {
     const n = NODES[id];
-    const L = labelsFor(id);
-    const level = n.kind ? n.kind[0].toUpperCase() + n.kind.slice(1) : n.depth === 0 ? 'Category' : n.childIds.length ? 'Sub-category' : 'Interest';
+    const L = LABELS;
+    const level = n.depth === 0 ? 'Category' : rootOf(id).name;
     let hint;
-    if (n.childIds.length) hint = `Yes or Curious opens ${n.childIds.length} more`;
-    else if (n.kind === 'title') hint = "Swipe up if you haven't seen it";
-    else if (n.kind === 'artist') hint = "Swipe up if you haven't heard them";
-    else if (n.kind === 'team') hint = "Swipe up if you don't follow them";
+    if (deckChildren(id).length) hint = `Yes or Curious opens ${deckChildren(id).length} more`;
+    else if (pickChildren(id).length) hint = `Check off favorite ${pickNoun(id)} later in your profile`;
     else hint = 'Swipe up if you want to try it';
-    return `<div class="card ${cls}" data-id="${id}" aria-hidden="${cls.includes('is-next')}">
+    return `<div class="card ${cls}" data-id="${id}" style="${catVar(id)}" aria-hidden="${cls.includes('is-next')}">
+      <span class="card-mark">${ic(n.icon)}</span>
       <span class="stamp stamp-yes">${esc(L.yes)}</span>
       <span class="stamp stamp-no">${esc(L.no)}</span>
       <span class="stamp stamp-maybe">${esc(L.maybe)}</span>
@@ -192,7 +192,7 @@
     const n = swipeCount();
     const cur = state.deck[0];
     const progress = n < UNLOCK_AT
-      ? `<div class="progress"><div class="progress-row"><span>Swipes until your first matches</span><span class="num">${n} of ${UNLOCK_AT}</span></div><div class="bar"><span style="width:${(n / UNLOCK_AT) * 100}%"></span></div></div>`
+      ? `<div class="progress"><div class="progress-row"><span>Swipes until your first matches</span><span class="num">${n} of ${UNLOCK_AT}</span></div><div class="bar" style="${catVar(cur || TREE[0].id)}"><span style="width:${(n / UNLOCK_AT) * 100}%;background:var(--cat)"></span></div></div>`
       : `<div class="pickbar"><span><strong>Matches unlocked.</strong> Keep swiping to sharpen them.</span><button class="btn btn-text" data-action="go" data-to="matches">See matches</button></div>`;
 
     if (!cur) {
@@ -204,7 +204,7 @@
           <button class="btn btn-secondary" data-action="undo" ${state.history.length ? '' : 'disabled'}>${ic('undo-2')}Undo last</button></div></div>
       </div>`;
     }
-    const L = labelsFor(cur);
+    const L = LABELS;
     const crumbs = pathOf(cur).slice(0, -1).map((p) => esc(p.name)).join(' / ');
     return `<div class="screen-inner">
       <div class="screen-head"><span class="label">Your interests</span><h1>What are you into?</h1></div>
@@ -287,7 +287,7 @@
     const to = dir === 'yes' ? `translate(520px, ${dy}px) rotate(24deg)` : dir === 'no' ? `translate(-520px, ${dy}px) rotate(-24deg)` : `translate(${dx}px, -640px)`;
     requestAnimationFrame(() => { card.style.transform = to; card.style.opacity = 0; });
     setTimeout(() => {
-      commit(id, dir === 'up' ? upValue(id) : dir);
+      commit(id, dir === 'up' ? 'maybe' : dir);
       busy = false;
       render();
     }, 260);
@@ -298,7 +298,7 @@
     state.answers[id] = v;
     const inserted = [];
     if (isPositive(v)) {
-      NODES[id].childIds.forEach((k) => { if (!(k in state.answers) && !state.deck.includes(k)) inserted.push(k); });
+      deckChildren(id).forEach((k) => { if (!(k in state.answers) && !state.deck.includes(k)) inserted.push(k); });
       state.deck.unshift(...inserted);
       if (inheritsPrivate(id) && !state.priv.includes(id)) state.priv.push(id);
     }
@@ -368,7 +368,7 @@
     const kept = state.drop.kept.includes(p.id);
     const state_ = picked ? `<span class="tag tag-accent">${ic('message-circle')}Chatting</span>` : kept ? `<span class="tag">${ic('lock')}Kept</span>` : `<span class="tag">${ic('clock')}Leaves at next drop</span>`;
     return `<button class="match ${picked ? 'is-picked' : ''}" data-action="open-match" data-id="${p.id}" aria-label="${esc(p.name)}, ${pct} percent match">
-      <span class="veil tone-${p.tone}">${ic('eye-off')}</span>
+      <span class="veil tinted" style="--cat: var(--c-${p.color})">${ic('eye-off')}</span>
       <span class="match-main">
         <span class="match-top"><span class="score">${pct}<small>%</small></span>${state_}</span>
         <span class="match-shared">${agree.length ? 'You share ' + esc(listJoin(agree.slice(0, 3).map((id) => NODES[id].name))) : 'Not much overlap yet'}</span>
@@ -394,7 +394,7 @@
     const picked = isPicked(p.id);
     const kept = state.drop.kept.includes(p.id);
     const chips = agree.length
-      ? agree.map((a) => `<span class="chip chip-static">${ic(NODES[a].icon)}${esc(NODES[a].name)}</span>`).join('')
+      ? agree.map((a) => `<span class="chip chip-static chip-cat" style="${catVar(a)}">${ic(NODES[a].icon)}${esc(NODES[a].name)}</span>`).join('')
       : '<p class="small">No shared interests yet. Keep swiping.</p>';
     const diffs = differ.length
       ? `<ul class="diff">${differ.map((d) => {
@@ -414,7 +414,7 @@
       <div class="scoreline"><span class="score">${pct}%</span><span class="small">interest match</span></div>
       <div class="tags"><span class="tag">${ic('users')}${modeLabel[p.mode]}</span><span class="tag">${ic('map-pin')}${p.miles} mi away</span></div>
       <div class="section">
-        <div class="reveal">${[1, 2, 3].map((i) => `<div class="veil tone-${p.tone}" role="img" aria-label="Photo ${i} of ${esc(p.name)}">${esc(p.name[0])}</div>`).join('')}</div>
+        <div class="reveal">${[1, 2, 3].map((i) => `<div class="veil tinted" style="--cat: var(--c-${p.color})" role="img" aria-label="Photo ${i} of ${esc(p.name)}">${esc(p.name[0])}</div>`).join('')}</div>
         <p class="small">Demo profiles have no real photos.</p>
       </div>
       <div class="section"><h3 class="label">Top ${agree.length} you agree on</h3><div class="chips">${chips}</div></div>
@@ -485,7 +485,7 @@
       return `<div class="chat">
         <div class="chat-head">
           <button class="icon-btn" data-action="close-thread" aria-label="Back to chats">${ic('chevron-left')}</button>
-          <span class="avatar tone-${p.tone}" aria-hidden="true">${esc(p.name[0])}</span>
+          <span class="avatar tinted" style="--cat: var(--c-${p.color})" aria-hidden="true">${esc(p.name[0])}</span>
           <span class="chat-title"><strong>${esc(p.name)}</strong><span class="small num">${t.pct}% match</span></span>
           <button class="chip" data-action="socials" ${t.socials !== 'none' ? 'disabled aria-disabled="true"' : ''}>${ic('share-2')}${socialsLabel}</button>
         </div>
@@ -512,7 +512,7 @@
       const last = t.log.filter((m) => m.from !== 'sys').at(-1);
       const unread = state.unread.includes(id);
       return `<li><button class="thread-link" data-action="open-thread" data-id="${id}">
-        <span class="avatar tone-${p.tone}" aria-hidden="true">${esc(p.name[0])}</span>
+        <span class="avatar tinted" style="--cat: var(--c-${p.color})" aria-hidden="true">${esc(p.name[0])}</span>
         <span class="thread-preview"><strong>${esc(p.name)}</strong><span class="small">${last ? esc((last.from === 'me' ? 'You: ' : '') + last.text) : 'Say hi. You matched on interests first.'}</span></span>
         ${unread ? '<span class="unread-dot" role="img" aria-label="Unread"></span>' : `<span class="small num">${t.pct}%</span>`}
       </button></li>`;
@@ -600,10 +600,10 @@
   function renderProfile() {
     const s = state.settings;
     const groups = TREE.map((root) => {
-      const ids = ORDER.filter((id) => rootOf(id).id === root.id && isPositive(state.answers[id]));
+      const ids = ORDER.filter((id) => rootOf(id).id === root.id && !isPick(id) && isPositive(state.answers[id]));
       if (!ids.length) return '';
       ids.sort((a, b) => (state.stars.includes(b) - state.stars.includes(a)));
-      return `<div class="panel"><h3 class="label">${esc(root.name)}</h3><ul class="rows">${ids.map(rowHTML).join('')}</ul></div>`;
+      return `<div class="panel panel-cat" style="${catVar(root.id)}"><h3 class="cat-head"><span class="cat-tile">${ic(root.icon)}</span>${esc(root.name)}</h3><ul class="rows">${ids.map(rowHTML).join('')}</ul></div>`;
     }).join('');
     const photoSlots = photos.map((src, i) => src
       ? `<div class="photo has-img"><img src="${src}" alt="Your photo ${i + 1}"><button class="icon-btn remove" data-action="remove-photo" data-i="${i}" aria-label="Remove photo ${i + 1}">${ic('x')}</button></div>`
@@ -665,15 +665,38 @@
   function rowHTML(id) {
     const n = NODES[id];
     const t = tierOf(id);
-    const L = labelsFor(id);
+    const L = LABELS;
     const starred = t === 'star';
     const priv = state.priv.includes(id);
     const tierText = starred ? 'Top 20' : t === 'maybe' ? L.maybe : L.yes;
     return `<li class="row">${ic(n.icon)}
-      <span class="row-main"><span class="row-name">${esc(n.name)}</span><span class="tier tier-${t}">${esc(tierText)}${priv ? ' · Private' : ''}</span></span>
+      <span class="row-main"><span class="row-name">${esc(n.name)}</span><span class="tier tier-${t}">${esc(tierText)}${priv ? ' · Private' : ''}</span>${pickLink(id)}</span>
       <button class="icon-btn star-btn" aria-pressed="${starred}" data-action="star" data-id="${id}" aria-label="${starred ? 'Unstar' : 'Star'} ${esc(n.name)}">${ic('star')}</button>
       <button class="icon-btn lock-btn" aria-pressed="${priv}" data-action="private" data-id="${id}" aria-label="${priv ? 'Show on profile' : 'Make private'}: ${esc(n.name)}">${ic(priv ? 'lock' : 'lock-open')}</button>
     </li>`;
+  }
+
+  function pickLink(id) {
+    const kids = pickChildren(id);
+    if (!kids.length) return '';
+    const picked = kids.filter((k) => state.answers[k] === 'yes').length;
+    return `<button class="pick-link" data-action="checklist" data-id="${id}">${picked ? `${picked} ${pickNoun(id, picked)} picked` : `Pick your ${pickNoun(id)}`}${ic('chevron-left', 'icon flip')}</button>`;
+  }
+
+  function openChecklist(id) {
+    const n = NODES[id];
+    const items = pickChildren(id).map((k) => {
+      const c = NODES[k];
+      return `<li><label class="check" for="pick-${k}">
+        <input type="checkbox" id="pick-${k}" data-pick="${k}" ${state.answers[k] === 'yes' ? 'checked' : ''}>
+        <span class="check-box">${ic('check')}</span>
+        <span class="row-main"><span class="row-name">${esc(c.name)}</span><span class="small">${esc(c.desc)}</span></span>
+      </label></li>`;
+    }).join('');
+    openSheet(n.name, `
+      <p class="small">Check the ${pickNoun(id)} you'd actually put on. Each one counts toward matching. Nothing here is a swipe.</p>
+      <ul class="checklist" style="${catVar(id)}">${items}</ul>
+      <button class="btn btn-primary btn-block" data-action="checklist-done">Done</button>`);
   }
 
   function toggleStar(id) {
@@ -702,7 +725,7 @@
     ORDER.forEach((id) => {
       if (id in state.answers) return;
       const n = NODES[id];
-      if (!n.parent || isPositive(state.answers[n.parent])) deck.push(id);
+      if (!isPick(id) && (!n.parent || isPositive(state.answers[n.parent]))) deck.push(id);
     });
     state.deck = deck;
     state.history = [];
@@ -769,6 +792,8 @@
       case 'socials': openSocials(); break;
       case 'send-socials': sendSocials(el); break;
       case 'star': toggleStar(id); break;
+      case 'checklist': openChecklist(id); break;
+      case 'checklist-done': closeSheet(); keepScroll(render); break;
       case 'private': togglePrivate(id); break;
       case 'set': state.settings[el.dataset.key] = el.dataset.v; save(); keepScroll(render); break;
       case 'toggle-show': {
@@ -796,6 +821,12 @@
       const reader = new FileReader();
       reader.onload = () => { photos[i] = reader.result; keepScroll(render); };
       reader.readAsDataURL(t.files[0]);
+    }
+    if (t.dataset.pick) {
+      if (t.checked) state.answers[t.dataset.pick] = 'yes';
+      else delete state.answers[t.dataset.pick];
+      save();
+      if (tab === 'profile') keepScroll(render);
     }
     if (t.id === 'age-min' || t.id === 'age-max') {
       const v = Math.min(99, Math.max(18, parseInt(t.value, 10) || 18));

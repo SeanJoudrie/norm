@@ -13,10 +13,10 @@ Open http://localhost:8000. It's built for a phone-width screen, and on desktop 
 
 ## What works
 
-- **Swipe**: drag the card, or use the buttons or arrow keys. Right means Into it, left means Nope, up means Curious. On movies, artists and teams, up means Haven't seen / Haven't heard / Don't follow, and those answers don't count toward matching. Saying Yes or Curious to a category opens its sub-categories. Undo (or press `z`) takes back the last swipe.
+- **Swipe**: drag the card, or use the buttons or arrow keys. Right means Into it, left means Nope, up means Curious. The deck only has categories and genres (Music, then EDM, Alternative rock and so on). It never shows specific bands, movies or teams. Saying Yes or Curious to a category opens its genres. Undo (or press `z`) takes back the last swipe.
 - **Matches**: unlock after 20 swipes. "Fill with sample answers" skips ahead. Tap a card to see the score, the top 5 interests you share, where you differ, and photos. You can message one person now and a second 12 hours later ("Skip wait" is a demo control). Cards you don't pick can be kept for $1.99, which is simulated and charges nothing.
 - **Messages**: text only. Links and @handles are blocked. "Swap socials" needs both people to agree.
-- **Profile**: 3 photo slots (stored only in memory), Top 20 stars, private interests, and match settings (looking for, gender, age, distance). Reset demo is at the bottom.
+- **Profile**: interests are grouped by category, each in its own color. A genre that has picks (Alternative rock, Horror, NFL) shows a "Pick your artists" link that opens a checklist. Checked picks count toward matching. Also on the profile: 3 photo slots (stored only in memory), Top 20 stars, private interests, and match settings (looking for, gender, age, distance). Reset demo is at the bottom.
 
 ## Matching
 

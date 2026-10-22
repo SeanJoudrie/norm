@@ -1,19 +1,41 @@
 /* NORM prototype data: interest tree and demo profiles.
-   Tree levels: category > sub-category > interest/title.
-   kind "title" leaves use Love / Not for me / Haven't seen. */
+   Swipe deck: categories and genres only.
+   Specific picks (kind artist / title / team) never appear as swipe cards;
+   they are a checklist under their genre on the profile. */
 
 const TREE = [
-  { id: 'music', name: 'Music', icon: 'headphones', desc: 'Genres, artists and live shows', children: [
-    { id: 'edm', name: 'EDM', icon: 'disc-3', desc: 'House, techno, festivals' },
-    { id: 'altrock', name: 'Alternative rock', icon: 'guitar', desc: 'Pick the bands you actually play', children: [
-      { id: 'radiohead', name: 'Radiohead', icon: 'music', kind: 'artist', desc: 'OK Computer, In Rainbows' },
-      { id: 'arcticmonkeys', name: 'Arctic Monkeys', icon: 'music', kind: 'artist', desc: 'AM, Favourite Worst Nightmare' },
-      { id: 'strokes', name: 'The Strokes', icon: 'music', kind: 'artist', desc: 'Is This It' },
-      { id: 'paramore', name: 'Paramore', icon: 'music', kind: 'artist', desc: 'Riot!, This Is Why' },
+  { id: 'music', name: 'Music', icon: 'headphones', desc: 'Genres you put on repeat', children: [
+    { id: 'edm', name: 'EDM', icon: 'disc-3', desc: 'House, techno, festivals', children: [
+      { id: 'fredagain', name: 'Fred again..', kind: 'artist', desc: 'Actual Life series' },
+      { id: 'daftpunk', name: 'Daft Punk', kind: 'artist', desc: 'Discovery, Random Access Memories' },
+      { id: 'skrillex', name: 'Skrillex', kind: 'artist', desc: 'Dubstep, Quest for Fire' },
+      { id: 'calvinharris', name: 'Calvin Harris', kind: 'artist', desc: 'Funk Wav Bounces' },
     ] },
-    { id: 'hiphop', name: 'Hip-hop', icon: 'mic-vocal', desc: 'Rap, R&B crossovers' },
-    { id: 'country', name: 'Country', icon: 'music', desc: 'Nashville to outlaw' },
+    { id: 'altrock', name: 'Alternative rock', icon: 'guitar', desc: 'Guitars, indie radio, live shows', children: [
+      { id: 'radiohead', name: 'Radiohead', kind: 'artist', desc: 'OK Computer, In Rainbows' },
+      { id: 'arcticmonkeys', name: 'Arctic Monkeys', kind: 'artist', desc: 'AM, Favourite Worst Nightmare' },
+      { id: 'strokes', name: 'The Strokes', kind: 'artist', desc: 'Is This It' },
+      { id: 'paramore', name: 'Paramore', kind: 'artist', desc: 'Riot!, This Is Why' },
+      { id: 'foofighters', name: 'Foo Fighters', kind: 'artist', desc: 'The Colour and the Shape' },
+    ] },
+    { id: 'hiphop', name: 'Hip-hop', icon: 'mic-vocal', desc: 'Rap, R&B crossovers', children: [
+      { id: 'kendrick', name: 'Kendrick Lamar', kind: 'artist', desc: 'good kid, m.A.A.d city' },
+      { id: 'outkast', name: 'OutKast', kind: 'artist', desc: 'Aquemini, Stankonia' },
+      { id: 'tyler', name: 'Tyler, the Creator', kind: 'artist', desc: 'IGOR, Flower Boy' },
+      { id: 'drake', name: 'Drake', kind: 'artist', desc: 'Take Care' },
+    ] },
+    { id: 'pop', name: 'Pop', icon: 'music', desc: 'Charts, singalongs, big choruses' },
+    { id: 'indie', name: 'Indie', icon: 'headphones', desc: 'Bedroom pop to indie folk' },
+    { id: 'metal', name: 'Metal', icon: 'zap', desc: 'Heavy, loud, mosh pits' },
+    { id: 'country', name: 'Country', icon: 'music', desc: 'Nashville to outlaw', children: [
+      { id: 'zachbryan', name: 'Zach Bryan', kind: 'artist', desc: 'American Heartbreak' },
+      { id: 'stapleton', name: 'Chris Stapleton', kind: 'artist', desc: 'Traveller' },
+      { id: 'dolly', name: 'Dolly Parton', kind: 'artist', desc: 'Jolene, Coat of Many Colors' },
+    ] },
+    { id: 'rnb', name: 'R&B and soul', icon: 'mic-vocal', desc: 'Motown to neo-soul' },
+    { id: 'latin', name: 'Latin', icon: 'drum', desc: 'Reggaeton, salsa, bachata' },
     { id: 'jazz', name: 'Jazz', icon: 'piano', desc: 'Bebop, fusion, late-night sets' },
+    { id: 'classical', name: 'Classical', icon: 'piano', desc: 'Orchestras, film scores, opera' },
   ] },
   { id: 'film', name: 'Film', icon: 'film', desc: 'Genres and the movies you rewatch', children: [
     { id: 'horror', name: 'Horror', icon: 'ghost', desc: 'Slashers to slow-burn dread', children: [
@@ -89,14 +111,14 @@ const TREE = [
 
 /* Demo profiles. Tiers: star (Top 20), yes, maybe, no. */
 const PROFILES = [
-  { id: 'lisa', name: 'Lisa', age: 29, miles: 4, gender: 'woman', mode: 'romance', tone: 1,
+  { id: 'lisa', name: 'Lisa', age: 29, miles: 4, gender: 'woman', mode: 'romance', color: 'music',
     answers: {
       music: 'yes', edm: 'star', altrock: 'maybe', hiphop: 'yes', film: 'yes', horror: 'star', shining: 'star',
       hereditary: 'yes', getout: 'yes', sports: 'yes', nfl: 'yes', patriots: 'star', outdoors: 'yes',
       hiking: 'star', fishing: 'no', camping: 'maybe', food: 'yes', cooking: 'yes', coffee: 'yes',
       travel: 'star', games: 'no', arts: 'maybe', sculpting: 'no', tech: 'maybe', fitness: 'yes', running: 'yes',
     } },
-  { id: 'anne', name: 'Anne', age: 33, miles: 2, gender: 'woman', mode: 'friends', tone: 2,
+  { id: 'anne', name: 'Anne', age: 33, miles: 2, gender: 'woman', mode: 'friends', color: 'games',
     answers: {
       music: 'yes', altrock: 'star', radiohead: 'star', strokes: 'yes', edm: 'no', film: 'yes', comedy: 'yes',
       horror: 'maybe', sports: 'yes', mlb: 'yes', redsox: 'star', nfl: 'maybe', outdoors: 'yes', fishing: 'star',
@@ -104,7 +126,7 @@ const PROFILES = [
       boardgames: 'star', dnd: 'yes', chess: 'maybe', tech: 'yes', coding: 'star', ai: 'yes', food: 'yes',
       coffee: 'star', craftbeer: 'yes', reading: 'yes',
     } },
-  { id: 'elizabeth', name: 'Elizabeth', age: 31, miles: 7, gender: 'woman', mode: 'both', tone: 3,
+  { id: 'elizabeth', name: 'Elizabeth', age: 31, miles: 7, gender: 'woman', mode: 'both', color: 'arts',
     answers: {
       arts: 'yes', sculpting: 'star', painting: 'yes', photography: 'star', writing: 'yes', fitness: 'yes',
       yoga: 'star', climbing: 'yes', travel: 'star', reading: 'star', music: 'yes', jazz: 'yes', edm: 'no',
@@ -116,10 +138,10 @@ const PROFILES = [
 
 /* Sample answers for the "fill with sample answers" shortcut. */
 const SAMPLE_ANSWERS = {
-  music: 'yes', edm: 'yes', altrock: 'yes', radiohead: 'yes', arcticmonkeys: 'skip', hiphop: 'no',
-  film: 'yes', horror: 'yes', shining: 'yes', hereditary: 'yes', getout: 'skip', comedy: 'yes',
+  music: 'yes', edm: 'yes', fredagain: 'yes', altrock: 'yes', radiohead: 'yes', strokes: 'yes', hiphop: 'no', indie: 'yes', pop: 'maybe',
+  film: 'yes', horror: 'yes', shining: 'yes', hereditary: 'yes', comedy: 'yes',
   sports: 'yes', nfl: 'yes', patriots: 'yes', chiefs: 'no', mlb: 'yes', redsox: 'yes',
   outdoors: 'yes', hiking: 'yes', fishing: 'maybe', camping: 'yes', food: 'yes', cooking: 'yes', coffee: 'yes',
   games: 'no', arts: 'maybe', sculpting: 'no', tech: 'yes', coding: 'yes', ai: 'yes', travel: 'yes',
 };
-const SAMPLE_STARS = ['edm', 'horror', 'patriots', 'hiking', 'shining'];
+const SAMPLE_STARS = ['edm', 'horror', 'nfl', 'hiking', 'cooking'];
