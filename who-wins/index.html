@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Who Wins?</title>
+<meta name="description" content="Debate who would win: draft Team vs Team or run a bracket, with random fight conditions rolled for every matchup.">
+<meta name="theme-color" content="#f3efe7">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23e0262f'/%3E%3Ctext x='16' y='23' font-family='Arial Black,Arial' font-weight='900' font-size='17' text-anchor='middle' fill='%23fff'%3EVS%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root {
+  --bg: #f3efe7;
+  --surface: #fbf9f4;
+  --surface-2: #ebe5da;
+  --ink: #17140f;
+  --ink-2: #4c463d;
+  --muted: #8a8276;
+  --line: #d9d1c3;
+  --accent: #e0262f;
+  --accent-ink: #ffffff;
+  --win: #15924a;
+  --win-bg: #e1f3e7;
+  --chip: #efe9de;
+  --shadow: 0 1px 2px rgba(23,20,15,.06), 0 4px 14px rgba(23,20,15,.06);
+  --head: "Big Shoulders Display", Impact, "Arial Narrow", sans-serif;
+  --body: "Barlow", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #11100e;
+    --surface: #1b1916;
+    --surface-2: #26231f;
+    --ink: #f3eee5;
+    --ink-2: #c9c2b6;
+    --muted: #8c857a;
+    --line: #34302a;
+    --accent: #ff4048;
+    --accent-ink: #ffffff;
+    --win: #3fd27f;
+    --win-bg: #143222;
+    --chip: #2a2722;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.4 var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px 64px; }
+.mono { font-family: var(--mono); }
+
+/* Header */
+.top {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+  padding: 20px 0 14px; border-bottom: 2px solid var(--ink);
+}
+.logo {
+  margin: 0; font: 900 clamp(40px, 11vw, 64px)/.85 var(--head);
+  letter-spacing: -.01em; text-transform: uppercase;
+}
+.logo em { font-style: normal; color: var(--accent); }
+.top-sub {
+  font: 500 12px/1.3 var(--mono); text-transform: uppercase; letter-spacing: .06em;
+  color: var(--ink-2); text-align: right; max-width: 50%;
+  overflow-wrap: anywhere; padding-bottom: 4px;
+}
+.top-sub b { color: var(--accent); font-weight: 700; }
+
+/* Tabs */
+.tabs { display: flex; gap: 6px; margin: 16px 0; }
+.tab {
+  flex: 0 1 auto; border: 2px solid var(--ink); background: transparent;
+  padding: 9px 16px; border-radius: 999px;
+  font: 800 17px/1 var(--head); letter-spacing: .04em; text-transform: uppercase;
+}
+.tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+
+/* Panels */
+.panels { display: grid; gap: 12px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 820px) { .panels { grid-template-columns: 1fr 1fr; } }
+details.panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+details.panel > summary {
+  list-style: none; cursor: pointer; padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  font: 800 20px/1 var(--head); text-transform: uppercase; letter-spacing: .03em;
+}
+details.panel > summary::-webkit-details-marker { display: none; }
+details.panel > summary::after {
+  content: "+"; font: 500 18px/1 var(--mono); color: var(--muted);
+}
+details.panel[open] > summary::after { content: "–"; }
+.panel-body { padding: 0 16px 16px; display: grid; gap: 12px; }
+
+label.f { display: grid; gap: 5px; }
+.lbl {
+  font: 500 11px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
+}
+input[type="text"], textarea {
+  width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 10px; font-size: 15px; line-height: 1.45;
+}
+textarea { resize: vertical; min-height: 80px; }
+input[type="text"]:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.two > * { min-width: 0; }
+.dump { min-height: 300px; white-space: pre; overflow-x: auto; }
+.hint { margin: -4px 0 0; font-size: 13px; color: var(--muted); }
+.check { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+.checks { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn {
+  border: 2px solid var(--ink); background: transparent; border-radius: 8px;
+  padding: 8px 13px; font: 600 14px/1.1 var(--body);
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .4; cursor: default; }
+.btn.sm { padding: 6px 10px; font-size: 13px; border-width: 1.5px; }
+
+/* Roll table */
+.rt { display: grid; gap: 10px; }
+.rt-row { display: grid; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.rt-row.off { opacity: .55; }
+.rt-row .check { font: 800 17px/1 var(--head); text-transform: uppercase; letter-spacing: .04em; }
+.rt-row textarea { min-height: 54px; font-size: 14px; background: var(--surface); }
+
+/* Results */
+.results { margin-top: 22px; }
+.score {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px;
+  padding: 14px 16px; border: 2px solid var(--ink); border-radius: 12px; background: var(--surface);
+}
+.sc-name {
+  font: 800 clamp(20px, 5vw, 30px)/1 var(--head); text-transform: uppercase;
+  overflow-wrap: anywhere; color: var(--ink-2);
+}
+.sc-name.b { text-align: right; }
+.sc-name.lead { color: var(--accent); }
+.sc-num { font: 700 clamp(26px, 7vw, 40px)/1 var(--mono); white-space: nowrap; }
+.sc-sub {
+  grid-column: 1 / -1; text-align: center; margin-top: 2px;
+  font: 500 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+}
+.grid { display: grid; gap: 12px; margin-top: 14px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px; display: grid; gap: 8px; box-shadow: var(--shadow); align-content: start;
+}
+.card-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.card-h h3 { margin: 0; font: 800 19px/1.05 var(--head); text-transform: uppercase; letter-spacing: .02em; }
+.card-h .n { font: 500 12px/1 var(--mono); color: var(--muted); }
+.row {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);
+  min-height: 44px;
+}
+.row:disabled { cursor: default; }
+.row .nm { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.row .nm.empty { color: var(--muted); font-weight: 400; font-style: italic; }
+.row .tag {
+  font: 500 10.5px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.row .badge { display: none; font: 700 11px/1 var(--mono); letter-spacing: .08em; color: var(--win); }
+.row.win { border-color: var(--win); background: var(--win-bg); }
+.row.win .nm { color: var(--win); }
+.row.win .badge { display: inline; }
+.row.lose .nm { text-decoration: line-through; color: var(--muted); }
+.row.lose { opacity: .7; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip {
+  border: 0; background: var(--chip); border-radius: 6px; padding: 5px 8px;
+  font-size: 12.5px; line-height: 1.2; text-align: left;
+}
+.chip b { font: 500 9.5px/1 var(--mono); text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-right: 5px; }
+.chip:hover { outline: 1px solid var(--line); }
+.chip.flash { animation: flash .5s ease-out; }
+@keyframes flash { from { background: var(--accent); color: var(--accent-ink); } }
+.roll { justify-self: start; }
+
+/* Bracket */
+.bracket { display: flex; gap: 14px; overflow-x: auto; padding: 2px 2px 14px; margin-top: 14px; scroll-snap-type: x proximity; }
+.col { flex: 0 0 290px; display: flex; flex-direction: column; gap: 12px; scroll-snap-align: start; }
+.col-h {
+  font: 800 18px/1 var(--head); text-transform: uppercase; letter-spacing: .05em;
+  padding: 8px 0; border-bottom: 2px solid var(--ink);
+}
+.col-body { display: flex; flex-direction: column; justify-content: space-around; gap: 12px; flex: 1; }
+.champ {
+  border: 2px solid var(--accent); border-radius: 12px; padding: 18px 14px; text-align: center; background: var(--surface);
+}
+.champ .nm { font: 900 32px/1 var(--head); text-transform: uppercase; color: var(--accent); overflow-wrap: anywhere; }
+.champ .nm.empty { color: var(--muted); font-size: 22px; }
+.empty-note { color: var(--muted); padding: 20px 0; }
+.ex-tag {
+  display: inline-block; font: 500 10.5px/1 var(--mono); text-transform: uppercase; letter-spacing: .07em;
+  background: var(--chip); color: var(--ink-2); padding: 5px 8px; border-radius: 6px;
+}
+
+/* Fight screen */
+.fight {
+  position: fixed; inset: 0; z-index: 50; background: var(--bg); overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.fight[hidden] { display: none; }
+.f-inner { width: 100%; max-width: 640px; margin: 0 auto; padding: 0 16px 32px; display: flex; flex-direction: column; gap: 18px; }
+.f-top {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 14px 0 12px; border-bottom: 2px solid var(--ink);
+  position: sticky; top: 0; background: var(--bg); z-index: 1;
+}
+.f-top h2 { margin: 0; font: 800 22px/1.05 var(--head); text-transform: uppercase; letter-spacing: .03em; overflow-wrap: anywhere; }
+.f-stage { display: flex; align-items: center; gap: 8px; padding-top: 6px; }
+.sq {
+  flex: 1 1 0; min-width: 0; aspect-ratio: 1; border: 0; border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px; transition: opacity .25s, box-shadow .25s;
+}
+.sq-a { background: var(--accent); color: var(--accent-ink); }
+.sq-b { background: var(--ink); color: var(--bg); }
+.sq .ini { font: 900 clamp(54px, 19vw, 128px)/.85 var(--head); text-transform: uppercase; }
+.sq .fn { font: 700 clamp(13px, 3.6vw, 17px)/1.15 var(--body); text-align: center; overflow-wrap: anywhere; max-width: 100%; }
+.sq.won { box-shadow: 0 0 0 4px var(--bg), 0 0 0 9px var(--win); }
+.sq.lost { opacity: .35; }
+.sq:disabled { cursor: default; }
+.vs { flex: 0 0 auto; font: 900 30px/1 var(--head); color: var(--ink); }
+.f-hint { margin: -6px 0 0; text-align: center; font: 500 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.stats { margin: 0; border-top: 1px solid var(--line); }
+.stat { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; padding: 12px 2px; border-bottom: 1px solid var(--line); }
+.stat dt { font: 500 11.5px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); flex: 0 0 auto; }
+.stat dd { margin: 0; font: 700 17px/1.25 var(--body); text-align: right; overflow-wrap: anywhere; }
+.stat dd.q { color: var(--muted); font-family: var(--mono); }
+.stat dd.spin { color: var(--ink-2); }
+.stat dd.land { animation: land .35s ease-out; }
+@keyframes land { from { color: var(--accent); transform: scale(1.12); } }
+.f-actions { display: flex; justify-content: center; gap: 10px; }
+.f-actions .btn { font-size: 16px; padding: 11px 26px; }
+
+.fight.play .sq-a { animation: inL 450ms cubic-bezier(.2,.9,.25,1) both; }
+.fight.play .sq-b { animation: inR 450ms cubic-bezier(.2,.9,.25,1) both; }
+.fight.play .vs { animation: stamp 260ms 430ms cubic-bezier(.3,1.4,.5,1) both; }
+@keyframes inL { from { transform: translateX(-110vw); } }
+@keyframes inR { from { transform: translateX(110vw); } }
+@keyframes stamp { from { transform: scale(2.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.toast {
+  position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 20px); z-index: 60;
+  background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 14px;
+  opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; max-width: calc(100% - 32px);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 class="logo">Who <em>Wins?</em></h1>
+    <div class="top-sub" id="sub" aria-live="polite"></div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Mode">
+    <button class="tab" role="tab" data-mode="team" aria-selected="true">Team vs Team</button>
+    <button class="tab" role="tab" data-mode="bracket" aria-selected="false">Bracket</button>
+  </div>
+
+  <div class="panels">
+    <details class="panel" id="setup" open>
+      <summary id="setup-title">Setup</summary>
+      <div class="panel-body" id="setup-body"></div>
+    </details>
+    <details class="panel" id="rt-panel" open>
+      <summary>Roll Table</summary>
+      <div class="panel-body">
+        <p class="hint">One option is rolled per checked category. Repeat an option to make it more likely. “Fighter 1” and “Fighter 2” become the fighters’ names.</p>
+        <div class="rt" id="rt"></div>
+        <div class="btns"><button class="btn sm" id="rt-reset">Restore defaults</button></div>
+      </div>
+    </details>
+  </div>
+
+  <section class="results" id="results" aria-live="polite"></section>
+</div>
+
+<div class="fight" id="fight" role="dialog" aria-modal="true" aria-labelledby="f-title" hidden>
+  <div class="f-inner">
+    <div class="f-top">
+      <h2 id="f-title"></h2>
+      <button class="btn sm" id="f-close">Close</button>
+    </div>
+    <div class="f-stage">
+      <button class="sq sq-a" data-side="a"><span class="ini"></span><span class="fn"></span></button>
+      <div class="vs" aria-hidden="true">VS</div>
+      <button class="sq sq-b" data-side="b"><span class="ini"></span><span class="fn"></span></button>
+    </div>
+    <p class="f-hint">Tap a fighter to crown the winner</p>
+    <dl class="stats" id="stats"></dl>
+    <div class="f-actions"><button class="btn primary" id="f-reroll">Reroll</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+"use strict";
+
+const KEY = "debate-bracket-v1";
+
+const DEF_CATS = [
+  { key: "location", name: "Location", on: true, opts: "City streets, Colosseum arena, Jungle, Open water, Desert, Arctic tundra, Space station, Haunted mansion, Abandoned mall, Skyscraper rooftop, Subway tunnels, Volcano rim, Fighter 1's home turf, Fighter 2's home turf" },
+  { key: "weapons", name: "Weapons", on: true, opts: "None (hands only), Firearms, Bows, Melee, Signature gear, Random weapon pile, Swapped gear, Improvised only, Aura battle" },
+  { key: "size", name: "Size", on: true, opts: "1v1, With followers, 1v1 then backup at 5 min" },
+  { key: "time", name: "Time", on: true, opts: "Broad daylight, Night, Thick fog, Thunderstorm, Blizzard" },
+  { key: "prep", name: "Prep", on: true, opts: "None (bloodlusted), 1 hour, 1 day, 1 week, Unlimited" },
+  { key: "winby", name: "Win by", on: true, opts: "To the death, Knockout, Ring out, Outsmart them, First blood, Capture the flag, Survive 10 min" },
+  { key: "intel", name: "Intel", on: false, opts: "Both know everything, Neither knows the other, Only Fighter 1 knows, Only Fighter 2 knows" },
+  { key: "version", name: "Version", on: false, opts: "Peak form, Start of their story, End of their story, Random era" },
+  { key: "wildcard", name: "Wildcard", on: false, opts: "Nothing, Nothing, Nothing, Half gravity, Zombie horde, Must stay silent, Crowd can intervene, Rising water, Teammate betrays, Random power swap" }
+];
+const CAT_NAME = Object.fromEntries(DEF_CATS.map(c => [c.key, c.name]));
+
+const DEF_TEAM_CATS = ["Movie Monsters", "Cartoon Dads", "Magic Users", "Characters Played by Keanu Reeves", "Detectives", "Horror Slashers", "Jedi (No Sith)", "Pixar Characters", "Live Action Sitcom Characters", "Chosen Ones", "Sidekicks", "Reality TV Stars", "Tank (Marvel or DC only)"];
+const EX_TOPIC = "Movie Monsters";
+const EX_FIGHTERS = ["Godzilla", "King Kong", "Xenomorph", "Predator", "The Thing", "Jaws"];
+
+const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pad2 = n => String(n).padStart(2, "0");
+const pickRand = arr => arr[Math.floor(Math.random() * arr.length)];
+
+function defaults() {
+  return {
+    mode: "team",
+    auto: false,
+    shuffle: false,
+    cats: DEF_CATS.map(({ key, on, opts }) => ({ key, on, opts })),
+    team: {
+      pA: "Player 1", pB: "Player 2",
+      cats: DEF_TEAM_CATS.slice(),
+      a: [], b: [],
+      m: DEF_TEAM_CATS.map(() => ({ a: "", b: "", w: null, conds: {} }))
+    },
+    topic: EX_TOPIC,
+    fighters: EX_FIGHTERS.slice(),
+    example: true,
+    seeds: [],
+    rounds: []
+  };
+}
+
+function load() {
+  const d = defaults();
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) { s = null; }
+  if (!s || typeof s !== "object") return d;
+  const out = Object.assign(d, s);
+  out.team = Object.assign(defaults().team, s.team || {});
+  const saved = Array.isArray(s.cats) ? s.cats : [];
+  out.cats = DEF_CATS.map(c => {
+    const f = saved.find(x => x && x.key === c.key);
+    return f ? { key: c.key, on: !!f.on, opts: String(f.opts ?? c.opts) } : { key: c.key, on: c.on, opts: c.opts };
+  });
+  if (!Array.isArray(out.rounds)) out.rounds = [];
+  return out;
+}
+
+let S = load();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable */ } }
+
+/* ---------- Conditions ---------- */
+const optsOf = c => c.opts.split(",").map(x => x.trim()).filter(Boolean);
+const catByKey = k => S.cats.find(c => c.key === k);
+function rollAll() {
+  const conds = {};
+  for (const c of S.cats) {
+    const o = optsOf(c);
+    if (c.on && o.length) conds[c.key] = pickRand(o);
+  }
+  return conds;
+}
+function rollOne(m, key) {
+  const c = catByKey(key);
+  const o = c ? optsOf(c) : [];
+  if (o.length) m.conds[key] = pickRand(o);
+}
+const sub = (v, a, b) => String(v).replace(/Fighter 1/g, a || "Fighter 1").replace(/Fighter 2/g, b || "Fighter 2");
+const condKeys = m => S.cats.map(c => c.key).filter(k => m.conds && k in m.conds);
+const ready = m => !!(m && m.a && m.b && !m.bye);
+
+/* ---------- Team mode ---------- */
+const lines = t => t.split("\n").map(x => x.trim());
+function setMatchups() {
+  const T = S.team;
+  const old = T.m;
+  T.m = T.cats.map((_, i) => {
+    const a = (T.a[i] || "").trim(), b = (T.b[i] || "").trim();
+    const o = old[i];
+    if (o && o.a === a && o.b === b) return o;
+    const n = { a, b, w: null, conds: {} };
+    if (S.auto && a && b) n.conds = rollAll();
+    return n;
+  });
+}
+
+/* ---------- Bracket mode ---------- */
+function shuffled(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function buildBracket() {
+  const names = [...new Set(S.fighters.map(x => x.trim()).filter(Boolean))];
+  if (names.length < 2) { toast("Add at least two characters"); return false; }
+  const seeds = S.shuffle ? shuffled(names) : names;
+  let size = 2; while (size < seeds.length) size *= 2;
+  const slots = seeds.concat(Array(size - seeds.length).fill(null));
+  S.seeds = seeds;
+  const r0 = [];
+  for (let i = 0; i < size / 2; i++) {
+    const a = slots[i], b = slots[size - 1 - i];
+    const m = { a, b, w: null, conds: {} };
+    if (b === null) { m.bye = true; m.w = a; }
+    else if (S.auto) m.conds = rollAll();
+    r0.push(m);
+  }
+  S.rounds = [r0];
+  for (let n = size / 4; n >= 1; n /= 2) S.rounds.push(Array.from({ length: n }, () => ({ a: null, b: null, w: null, conds: {} })));
+  propagate();
+  return true;
+}
+function propagate() {
+  for (let r = 1; r < S.rounds.length; r++) {
+    const prev = S.rounds[r - 1];
+    S.rounds[r].forEach((m, j) => {
+      const na = prev[2 * j].w || null, nb = prev[2 * j + 1].w || null;
+      if (m.a !== na || m.b !== nb) {
+        m.a = na; m.b = nb; m.w = null; m.conds = {};
+        if (S.auto && na && nb) m.conds = rollAll();
+      }
+    });
+  }
+}
+function roundLabel(r) {
+  const left = S.rounds.length - r;
+  return left === 1 ? "Final" : left === 2 ? "Semifinals" : left === 3 ? "Quarterfinals" : "Round " + (r + 1);
+}
+const seedOf = name => { const i = S.seeds.indexOf(name); return i < 0 ? "" : "#" + (i + 1); };
+
+/* ---------- Context helpers (team row or bracket match) ---------- */
+function getM(ctx) {
+  return ctx.t === "team" ? S.team.m[ctx.i] : (S.rounds[ctx.r] || [])[ctx.j];
+}
+function ctxTitle(ctx) {
+  if (ctx.t === "team") return S.team.cats[ctx.i] || "Fight " + pad2(ctx.i + 1);
+  return (S.topic || "Bracket") + " · " + roundLabel(ctx.r);
+}
+function setWin(ctx, side) {
+  const m = getM(ctx);
+  if (!ready(m)) return;
+  if (ctx.t === "team") m.w = m.w === side ? null : side;
+  else { const nm = m[side]; m.w = m.w === nm ? null : nm; propagate(); }
+  save();
+}
+const winSide = (ctx, m) => ctx.t === "team" ? m.w : (m.w ? (m.w === m.a ? "a" : "b") : null);
+const parseCtx = s => { const p = s.split(":"); return p[0] === "t" ? { t: "team", i: +p[1] } : { t: "br", r: +p[1], j: +p[2] }; };
+const ctxStr = c => c.t === "team" ? "t:" + c.i : "b:" + c.r + ":" + c.j;
+
+/* ---------- Render ---------- */
+function renderSub() {
+  $("sub").innerHTML = S.mode === "team"
+    ? esc(S.team.pA || "Player 1") + " <b>vs</b> " + esc(S.team.pB || "Player 2")
+    : esc(S.topic || "Bracket");
+}
+
+function renderTabs() {
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.mode === S.mode)));
+}
+
+function autoBox() {
+  return `<label class="check"><input type="checkbox" data-in="auto" ${S.auto ? "checked" : ""}> Auto-roll every fight</label>`;
+}
+
+function renderSetup() {
+  const T = S.team;
+  if (S.mode === "team") {
+    $("setup-title").textContent = "Team Setup";
+    $("setup-body").innerHTML = `
+      <div class="two">
+        <label class="f"><span class="lbl">Player 1</span><input type="text" data-in="pA" value="${esc(T.pA)}" maxlength="40"></label>
+        <label class="f"><span class="lbl">Player 2</span><input type="text" data-in="pB" value="${esc(T.pB)}" maxlength="40"></label>
+      </div>
+      <label class="f"><span class="lbl">Categories · one per line</span><textarea data-in="cats" rows="6">${esc(T.cats.join("\n"))}</textarea></label>
+      <div class="two">
+        <label class="f"><span class="lbl" data-lbl="dA">${esc(T.pA || "Player 1")}’s picks</span><textarea class="dump" data-in="a" placeholder="One per line, in category order">${esc(T.a.join("\n"))}</textarea></label>
+        <label class="f"><span class="lbl" data-lbl="dB">${esc(T.pB || "Player 2")}’s picks</span><textarea class="dump" data-in="b" placeholder="One per line, in category order">${esc(T.b.join("\n"))}</textarea></label>
+      </div>
+      <p class="hint">Line 1 is the first category, line 2 the second, and so on. Leave a line blank for no pick yet.</p>
+      <div class="checks">${autoBox()}</div>
+      <div class="btns">
+        <button class="btn primary" data-act="set">Set matchups</button>
+        <button class="btn" data-act="clearw">Clear winners</button>
+        <button class="btn" data-act="rerollall">Reroll every fight</button>
+      </div>`;
+  } else {
+    $("setup-title").textContent = "Bracket Setup";
+    $("setup-body").innerHTML = `
+      <label class="f"><span class="lbl">Topic</span><input type="text" data-in="topic" value="${esc(S.topic)}" maxlength="60"></label>
+      <label class="f"><span class="lbl">Characters · one per line</span><textarea data-in="fighters" rows="9">${esc(S.fighters.join("\n"))}</textarea></label>
+      <div class="checks">
+        <label class="check"><input type="checkbox" data-in="shuffle" ${S.shuffle ? "checked" : ""}> Shuffle seeding</label>
+        ${autoBox()}
+      </div>
+      <div class="btns">
+        <button class="btn primary" data-act="build">Build bracket</button>
+        <button class="btn" data-act="clearr">Clear results</button>
+      </div>`;
+  }
+}
+
+function rowHtml(ctx, m, side, tag) {
+  const nm = m[side];
+  const ws = winSide(ctx, m);
+  const cls = ws ? (ws === side ? "win" : nm ? "lose" : "") : "";
+  const label = nm ? esc(nm) : (m.bye && side === "b" ? "BYE" : ctx.t === "team" ? "No pick yet" : "TBD");
+  return `<button class="row ${cls}" data-act="win" data-ctx="${ctxStr(ctx)}" data-side="${side}" ${ready(m) ? "" : "disabled"} aria-pressed="${ws === side}">
+    <span class="nm ${nm ? "" : "empty"}">${label}</span>${tag ? `<span class="tag">${esc(tag)}</span>` : ""}<span class="badge">WIN</span></button>`;
+}
+
+function cardHtml(ctx, m, title, num, tagA, tagB) {
+  const keys = condKeys(m);
+  const chips = keys.map(k => `<button class="chip" data-act="chip" data-ctx="${ctxStr(ctx)}" data-key="${k}" title="Tap to reroll"><b>${esc(CAT_NAME[k])}</b>${esc(sub(m.conds[k], m.a, m.b))}</button>`).join("");
+  const roll = m.bye ? "" : `<button class="btn sm roll" data-act="fight" data-ctx="${ctxStr(ctx)}" ${ready(m) ? "" : "disabled"}>${keys.length ? "Reroll all" : "Roll conditions"}</button>`;
+  return `<article class="card">
+    <div class="card-h"><h3>${esc(title)}</h3><span class="n">${num}</span></div>
+    ${rowHtml(ctx, m, "a", tagA)}${rowHtml(ctx, m, "b", tagB)}
+    ${chips ? `<div class="chips">${chips}</div>` : ""}${roll}
+  </article>`;
+}
+
+function renderResults() {
+  const el = $("results");
+  if (S.mode === "team") {
+    const T = S.team;
+    const sa = T.m.filter(m => m.w === "a").length, sb = T.m.filter(m => m.w === "b").length;
+    const left = T.m.filter(m => !m.w).length;
+    const cards = T.m.map((m, i) => cardHtml({ t: "team", i }, m, T.cats[i] || "Fight", pad2(i + 1), T.pA || "Player 1", T.pB || "Player 2")).join("");
+    el.innerHTML = `
+      <div class="score">
+        <div class="sc-name a ${sa > sb ? "lead" : ""}">${esc(T.pA || "Player 1")}</div>
+        <div class="sc-num">${sa} – ${sb}</div>
+        <div class="sc-name b ${sb > sa ? "lead" : ""}">${esc(T.pB || "Player 2")}</div>
+        <div class="sc-sub">${T.m.length ? (left ? left + (left === 1 ? " fight left" : " fights left") : "All fights called") : "No categories yet"}</div>
+      </div>
+      <div class="grid">${cards}</div>`;
+  } else {
+    if (!S.rounds.length) { el.innerHTML = `<p class="empty-note">Add characters and tap Build bracket.</p>`; return; }
+    let num = 0;
+    const cols = S.rounds.map((round, r) => `
+      <div class="col"><div class="col-h">${roundLabel(r)}</div><div class="col-body">
+        ${round.map((m, j) => cardHtml({ t: "br", r, j }, m, "Match", pad2(++num), seedOf(m.a), m.bye ? "" : seedOf(m.b))).join("")}
+      </div></div>`).join("");
+    const champ = S.rounds[S.rounds.length - 1][0].w;
+    el.innerHTML = `
+      ${S.example ? `<span class="ex-tag">Example bracket · replace the characters to make your own</span>` : ""}
+      <div class="bracket">${cols}
+        <div class="col"><div class="col-h">Champion</div><div class="col-body">
+          <div class="champ"><div class="lbl">${esc(S.topic || "Bracket")}</div><div class="nm ${champ ? "" : "empty"}">${champ ? esc(champ) : "To be decided"}</div></div>
+        </div></div>
+      </div>`;
+  }
+}
+
+function renderRollTable() {
+  $("rt").innerHTML = S.cats.map((c, i) => `
+    <div class="rt-row ${c.on ? "" : "off"}">
+      <label class="check"><input type="checkbox" data-rt-on="${i}" ${c.on ? "checked" : ""}> ${esc(CAT_NAME[c.key])}</label>
+      <textarea data-rt-opts="${i}" rows="2" aria-label="${esc(CAT_NAME[c.key])} options, comma separated">${esc(c.opts)}</textarea>
+    </div>`).join("");
+}
+
+function render() { renderSub(); renderResults(); }
+function renderAll() { renderTabs(); renderSetup(); renderRollTable(); render(); }
+
+let toastT;
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+/* ---------- Events ---------- */
+document.querySelector(".tabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if (!b || b.dataset.mode === S.mode) return;
+  S.mode = b.dataset.mode;
+  if (S.mode === "bracket" && !S.rounds.length) buildBracket();
+  save(); renderTabs(); renderSetup(); render();
+});
+
+$("setup-body").addEventListener("input", e => {
+  const k = e.target.dataset.in; if (!k) return;
+  const v = e.target.value, T = S.team;
+  if (k === "pA" || k === "pB") {
+    T[k] = v;
+    const l = document.querySelector(`[data-lbl="${k === "pA" ? "dA" : "dB"}"]`);
+    if (l) l.textContent = (v || (k === "pA" ? "Player 1" : "Player 2")) + "’s picks";
+    render();
+  }
+  else if (k === "cats") T.cats = lines(v).filter(Boolean);
+  else if (k === "a" || k === "b") T[k] = v.split("\n");
+  else if (k === "topic") { S.topic = v; render(); }
+  else if (k === "fighters") { S.fighters = v.split("\n"); S.example = false; }
+  save();
+});
+$("setup-body").addEventListener("change", e => {
+  const k = e.target.dataset.in;
+  if (k === "auto") { S.auto = e.target.checked; save(); }
+  if (k === "shuffle") { S.shuffle = e.target.checked; save(); }
+});
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const act = b.dataset.act;
+  if (act === "set") { setMatchups(); save(); render(); toast("Matchups set"); }
+  else if (act === "clearw") { S.team.m.forEach(m => m.w = null); save(); render(); }
+  else if (act === "rerollall") {
+    const ms = S.team.m.filter(ready); ms.forEach(m => m.conds = rollAll());
+    save(); render(); toast(ms.length ? "Rerolled " + ms.length + (ms.length === 1 ? " fight" : " fights") : "No complete matchups yet");
+  }
+  else if (act === "build") { if (buildBracket()) { save(); render(); toast("Bracket built"); } }
+  else if (act === "clearr") {
+    if (!S.rounds.length) return;
+    S.rounds[0].forEach(m => { if (!m.bye) m.w = null; });
+    propagate(); save(); render();
+  }
+  else if (act === "win") { setWin(parseCtx(b.dataset.ctx), b.dataset.side); render(); }
+  else if (act === "chip") {
+    const ctx = parseCtx(b.dataset.ctx), m = getM(ctx);
+    rollOne(m, b.dataset.key); save(); render();
+    const nb = document.querySelector(`.chip[data-ctx="${b.dataset.ctx}"][data-key="${b.dataset.key}"]`);
+    if (nb) nb.classList.add("flash");
+  }
+  else if (act === "fight") openFight(parseCtx(b.dataset.ctx), b);
+});
+
+$("rt").addEventListener("input", e => {
+  const i = e.target.dataset.rtOpts; if (i == null) return;
+  S.cats[+i].opts = e.target.value; save();
+});
+$("rt").addEventListener("change", e => {
+  const i = e.target.dataset.rtOn; if (i == null) return;
+  S.cats[+i].on = e.target.checked;
+  e.target.closest(".rt-row").classList.toggle("off", !e.target.checked);
+  save();
+});
+$("rt-reset").addEventListener("click", () => {
+  S.cats = DEF_CATS.map(({ key, on, opts }) => ({ key, on, opts }));
+  save(); renderRollTable(); toast("Roll table restored");
+});
+
+/* ---------- Fight screen ---------- */
+const F = { ctx: null, timers: [], opener: null };
+const fightEl = $("fight");
+function initials(name) {
+  const w = String(name).split(/\s+/).map(x => x.replace(/^[^\p{L}\p{N}]+/u, "")).filter(Boolean);
+  if (!w.length) return "?";
+  const f = w.length > 1 && /^the$/i.test(w[0]) ? w.slice(1) : w;
+  return (f.length > 1 ? f[0][0] + f[f.length - 1][0] : f[0][0]).toUpperCase();
+}
+function clearTimers() { F.timers.forEach(t => { clearTimeout(t); clearInterval(t); }); F.timers = []; }
+
+function paintSquares() {
+  const m = getM(F.ctx); if (!m) return;
+  const ws = winSide(F.ctx, m);
+  for (const side of ["a", "b"]) {
+    const sq = fightEl.querySelector(".sq-" + side);
+    sq.querySelector(".ini").textContent = initials(m[side]);
+    sq.querySelector(".fn").textContent = m[side];
+    sq.classList.toggle("won", ws === side);
+    sq.classList.toggle("lost", !!ws && ws !== side);
+    sq.setAttribute("aria-label", m[side] + (ws === side ? ", winner" : "") + ". Tap to crown winner");
+  }
+}
+
+function play() {
+  clearTimers();
+  const m = getM(F.ctx);
+  $("f-title").textContent = ctxTitle(F.ctx);
+  paintSquares();
+  const keys = condKeys(m);
+  const stats = $("stats");
+  stats.innerHTML = keys.length
+    ? keys.map(k => `<div class="stat"><dt>${esc(CAT_NAME[k])}</dt><dd class="q" data-k="${k}">?</dd></div>`).join("")
+    : `<div class="stat"><dt>Conditions</dt><dd>None enabled in the Roll Table</dd></div>`;
+  const land = (dd, k) => { dd.className = "land"; dd.textContent = sub(m.conds[k], m.a, m.b); };
+
+  if (reduced.matches) {
+    fightEl.classList.remove("play");
+    stats.querySelectorAll("dd[data-k]").forEach(dd => land(dd, dd.dataset.k));
+    return;
+  }
+  fightEl.classList.remove("play"); void fightEl.offsetWidth; fightEl.classList.add("play");
+  stats.querySelectorAll("dd[data-k]").forEach((dd, idx) => {
+    const k = dd.dataset.k, pool = optsOf(catByKey(k));
+    F.timers.push(setTimeout(() => {
+      dd.className = "spin";
+      const tick = () => { dd.textContent = sub(pickRand(pool.length ? pool : [m.conds[k]]), m.a, m.b); };
+      tick();
+      const iv = setInterval(tick, 55);
+      F.timers.push(iv);
+      F.timers.push(setTimeout(() => { clearInterval(iv); land(dd, k); }, 650));
+    }, 700 + idx * 380));
+  });
+}
+
+function openFight(ctx, opener) {
+  const m = getM(ctx); if (!ready(m)) return;
+  F.ctx = ctx; F.opener = opener || null;
+  m.conds = rollAll(); save(); render();
+  fightEl.hidden = false;
+  document.body.style.overflow = "hidden";
+  fightEl.scrollTop = 0;
+  play();
+  $("f-close").focus({ preventScroll: true });
+}
+function closeFight() {
+  if (fightEl.hidden) return;
+  clearTimers();
+  fightEl.hidden = true; fightEl.classList.remove("play");
+  document.body.style.overflow = "";
+  const key = F.opener && F.opener.dataset.ctx;
+  F.ctx = null;
+  const again = key && document.querySelector(`[data-act="fight"][data-ctx="${key}"]`);
+  if (again) again.focus({ preventScroll: true });
+}
+$("f-close").addEventListener("click", closeFight);
+$("f-reroll").addEventListener("click", () => {
+  const m = getM(F.ctx); if (!m) return;
+  m.conds = rollAll(); save(); render(); play();
+});
+fightEl.querySelectorAll(".sq").forEach(sq => sq.addEventListener("click", () => {
+  setWin(F.ctx, sq.dataset.side); paintSquares(); render();
+}));
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeFight(); });
+
+/* ---------- Boot ---------- */
+if (innerWidth < 820) $("rt-panel").open = false;
+if (S.mode === "bracket" && !S.rounds.length) buildBracket();
+if (S.example && !S.rounds.length) buildBracket();
+save();
+renderAll();
+})();
+</script>
+</body>
+</html>
